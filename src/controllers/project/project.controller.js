@@ -99,10 +99,10 @@ export async function addProject(req, res) {
 
 export async function getAllProjects(req, res) {
   try {
-    const userUid = req.user.uuid;
+    // const userUid = req.user.uuid;
 
     const projects = await Project.findAll({
-      where: { createdByUuid: userUid },
+      attributes: ["uuid", "title", "trade", "sector", "tehsil", "duration", "status"]
     });
     return successOkWithData(res, "Projects retrieved successfully", projects);
   } catch (error) {
@@ -119,7 +119,12 @@ export async function getProjectDetails(req, res) {
 
     const { uuid } = req.query;
 
-    const project = await Project.findByPk(uuid);
+    const project = await Project.findOne({
+      where: { uuid },
+      attributes: {
+        exclude: ["approvedBy", "createdAt", "updatedAt"]
+      }
+    });
     if (!project) return frontError(res, "Invalid uuid.");
     return successOkWithData(res, "Project retrieved successfully", project);
   } catch (error) {
@@ -211,37 +216,155 @@ export async function deleteProject(req, res) {
 
 // ========================= Project stats ============================
 
+// export async function projectStats(req, res) {
+//   try {
+//     const userUid = req.user.uuid;
+
+//     const totalProjectCount = await Project.count({
+//       where: { createdByUuid: userUid },
+//     });
+//     const pendingProjectCount = await Project.count({
+//       where: { createdByUuid: userUid, status: "pending" },
+//     });
+//     const openProjectCount = await Project.count({
+//       where: { createdByUuid: userUid, status: "open" },
+//     });
+//     const closedProjectCount = await Project.count({
+//       where: { createdByUuid: userUid, status: "closed" },
+//     });
+//     const rejectedProjectCount = await Project.count({
+//       where: { createdByUuid: userUid, status: "rejected" },
+//     });
+
+//     return successOkWithData(res, "Stats fetched successfully.", {
+//       totalProjectCount,
+//       pendingProjectCount,
+//       openProjectCount,
+//       closedProjectCount,
+//       rejectedProjectCount,
+//     });
+//   } catch (error) {
+//     return catchError(res, error);
+//   }
+// }
+
+
 export async function projectStats(req, res) {
   try {
-    const userUid = req.user.uuid;
+    // 1. Basic Status Stats
+    const [total, pending, open, closed, rejected] = await Promise.all([
+      Project.count(),
+      Project.count({ where: { status: "pending" } }),
+      Project.count({ where: { status: "open" } }),
+      Project.count({ where: { status: "closed" } }),
+      Project.count({ where: { status: "rejected" } }),
+    ]);
 
-    const totalProjectCount = await Project.count({
-      where: { createdByUuid: userUid },
-    });
-    const pendingProjectCount = await Project.count({
-      where: { createdByUuid: userUid, status: "pending" },
-    });
-    const openProjectCount = await Project.count({
-      where: { createdByUuid: userUid, status: "open" },
-    });
-    const closedProjectCount = await Project.count({
-      where: { createdByUuid: userUid, status: "closed" },
-    });
-    const rejectedProjectCount = await Project.count({
-      where: { createdByUuid: userUid, status: "rejected" },
+    // 2. Group-based stats
+    const [byTrade, bySector, byProvince, byDistrict] = await Promise.all([
+      groupByField("trade"),
+      groupByField("sector"),
+      groupByField("province"),
+      groupByField("district"),
+      // groupByField("creatorType"),
+    ]);
+
+    // 3. Slots availability
+    const [fullyFilled, partiallyFilled, empty] = await Promise.all([
+      Project.count({
+        where: Sequelize.where(Sequelize.col("slots_filled"), Sequelize.col("total_slots")),
+      }),
+      Project.count({
+        where: {
+          slotsFilled: {
+            [Op.gt]: 0,
+            [Op.lt]: Sequelize.col("total_slots"),
+          },
+        },
+      }),
+      Project.count({
+        where: {
+          slotsFilled: 0,
+        },
+      }),
+    ]);
+
+    // 4. Deadline stats
+    const today = new Date();
+    const deadlineStats = await Promise.all([
+      Project.count({
+        where: {
+          deadline: { [Op.lt]: today },
+        },
+      }),
+      Project.count({
+        where: {
+          deadline: {
+            [Op.gte]: today,
+            [Op.lte]: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000),
+          },
+        },
+      }),
+      Project.count({
+        where: {
+          deadline: { [Op.gt]: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000) },
+        },
+      }),
+    ]);
+
+    const [expired, expiringSoon, activeDeadlines] = deadlineStats;
+
+    // 5. Recent projects (last 7 days)
+    const recentProjects = await Project.count({
+      where: {
+        createdAt: {
+          [Op.gte]: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000),
+        },
+      },
     });
 
-    return successOkWithData(res, "Stats fetched successfully.", {
-      totalProjectCount,
-      pendingProjectCount,
-      openProjectCount,
-      closedProjectCount,
-      rejectedProjectCount,
+    return successOkWithData(res, "Project stats fetched successfully.", {
+      total,
+      status: { pending, open, closed, rejected },
+      byTrade,
+      bySector,
+      byProvince,
+      byDistrict,
+      // createdByType,
+      slotAvailability: {
+        fullyFilled,
+        partiallyFilled,
+        empty,
+      },
+      deadlineStatus: {
+        expired,
+        expiringSoon,
+        active: activeDeadlines,
+      },
+      recentlyAdded: recentProjects,
     });
   } catch (error) {
     return catchError(res, error);
   }
 }
+
+// ===== Reusable Grouping Function =====
+async function groupByField(field) {
+  const result = await Project.findAll({
+    attributes: [
+      [Sequelize.col(field), field],
+      [Sequelize.fn("COUNT", Sequelize.col(field)), "count"],
+    ],
+    group: [field],
+    raw: true,
+  });
+
+  return result.reduce((acc, row) => {
+    acc[row[field] || "Unknown"] = Number(row.count);
+    return acc;
+  }, {});
+}
+
 
 // ========================= Enrolled Students ============================
 

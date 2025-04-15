@@ -30,13 +30,13 @@ import Employer from "../../models/user/user.model.js";
 
 // ========================= Register User ============================
 
-export async function registerEmployer(req, res) {
+export async function registerPpmiAdmin(req, res) {
   try {
     // ✅ Check if required fields are provided
     const reqBodyFields = bodyReqFields(req, res, [
       "email",
       "name",
-      "organization",
+      // "organization",
       "countryCode",
       "phone",
       "password",
@@ -103,7 +103,7 @@ export async function registerEmployer(req, res) {
 
 // ========================= Login User ============================
 
-export async function loginUser(req, res) {
+export async function loginPpmiAdmin(req, res) {
   try {
     const reqBodyFields = bodyReqFields(req, res, ["email", "password"]);
     if (reqBodyFields.error) return reqBodyFields.response;

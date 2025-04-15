@@ -1,13 +1,21 @@
 import sequelize from "../../config/dbConfig.js";
 import { DataTypes } from "sequelize";
 
-const PpmiAdmin = sequelize.define(
-  "PpmiAdmin",
+const Admin = sequelize.define(
+  "Admin",
   {
     uuid: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+    },
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     email: {
       type: DataTypes.STRING,
@@ -18,22 +26,6 @@ const PpmiAdmin = sequelize.define(
       type: DataTypes.STRING, // ✅ ADD THIS FIELD
       allowNull: false, // Users must have a password
     },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    // description: {
-    //   type: DataTypes.TEXT,
-    //   allowNull: true, // Short description about the employer
-    // },
-    // organization: {
-    //   type: DataTypes.STRING,
-    //   allowNull: false,
-    // },
-    // industry: {
-    //   type: DataTypes.STRING,
-    //   allowNull: true, // The sector the employer operates in
-    // },
     countryCode: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -41,6 +33,19 @@ const PpmiAdmin = sequelize.define(
     phone: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    dateOfBirth: {
+      type: DataTypes.DATE,
+      allowNull: true, // Optional
+    },
+    cnic: {
+      type: DataTypes.STRING,
+      allowNull: true, // Optional
+      unique: true,
+    },
+    gender: {
+      type: DataTypes.ENUM("male", "female", "other"),
+      allowNull: true, // Optional
     },
     address: {
       type: DataTypes.STRING, // Address (filled later)
@@ -58,10 +63,14 @@ const PpmiAdmin = sequelize.define(
       type: DataTypes.STRING, // province (filled later)
       allowNull: true,
     },
-    // status: {
-    //   type: DataTypes.ENUM("pending", "approved", "rejected"),
-    //   defaultValue: "pending", // Admin approval status
-    // },
+    role: {
+      type: DataTypes.ENUM("m&e", "apprenticeship"),
+      allowNull: false,
+    },
+    verified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false, // Admin approval status
+    },
     profileImg: {
       type: DataTypes.STRING, // Profile image (optional)
       allowNull: true,
@@ -85,4 +94,4 @@ const PpmiAdmin = sequelize.define(
   }
 );
 
-export default PpmiAdmin;
+export default Admin;

@@ -106,8 +106,8 @@ const Project = sequelize.define(
 export default Project;
 
 // ========================= Relations ============================
-import Admin from "../user/user.model.js";
-// import Employer from "../employer/employer.model.js";
+import Admin from "../admin/admin.model.js";
+import Employer from "../employer/employer.model.js";
 
 // Define associations dynamically using a scope condition
 Admin.hasMany(Project, {
@@ -126,18 +126,18 @@ Project.belongsTo(Admin, {
   targetKey: "uuid",
 });
 
-// Employer.hasMany(Project, {
-//   foreignKey: "createdByUuid",
-//   constraints: false,
-//   scope: {
-//     creatorType: "employer", // Ensures only projects created by Employers are associated
-//   },
-//   as: "employerProjects",
-// });
+Employer.hasMany(Project, {
+  foreignKey: "createdByUuid",
+  constraints: false,
+  scope: {
+    creatorType: "employer", // Ensures only projects created by Employers are associated
+  },
+  as: "employerProjects",
+});
 
-// Project.belongsTo(Employer, {
-//   foreignKey: "createdByUuid",
-//   constraints: false,
-//   as: "employer",
-//   targetKey: "uuid",
-// });
+Project.belongsTo(Employer, {
+  foreignKey: "createdByUuid",
+  constraints: false,
+  as: "employer",
+  targetKey: "uuid",
+});

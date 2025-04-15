@@ -24,7 +24,10 @@ import { getIPAddress } from "./utils/utils.js";
 import "./models/models.js";
 import authRoutes from "./routes/auth/auth.route.js";
 import profileRoutes from "./routes/profile/profile.route.js";
+import studentRoutes from "./routes/student/student.route.js";
 import projectRoutes from "./routes/project/project.route.js";
+import applicationRoutes from "./routes/application/application.route.js";
+import adminRoutes from "./routes/admin/admin.route.js";
 
 // =========================================
 //            Configurations
@@ -89,7 +92,11 @@ app.get("/", (req, res) => {
 // other routes
 app.use("/api/auth", authRoutes);
 app.use("/api/user", profileRoutes);
+app.use("/api/student", studentRoutes);
 app.use("/api/project", projectRoutes);
+app.use("/api/application", applicationRoutes);
+app.use("/api/application", adminRoutes);
+app.use("/api/admin", adminRoutes);
 
 // =========================================
 //            Global Error Handler

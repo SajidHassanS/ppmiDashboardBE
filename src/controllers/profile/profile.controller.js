@@ -6,7 +6,7 @@ import {
     successOkWithData,
     UnauthorizedError,
 } from "../../utils/responses.js";
-import Employer from "../../models/user/user.model.js";
+import PpmiAdmin from "../../models/user/user.model.js";
 
 // ========================= Get Profile ============================
 
@@ -14,7 +14,12 @@ export async function getProfile(req, res) {
     try {
         const userUid = req.userUid
 
-        const profile = await Employer.findByPk(userUid);
+        const profile = await PpmiAdmin.findOne({
+            where: { uuid: userUid },
+            attributes: {
+                exclude: ["password", "otp", "otpCount", "canChangePassword", "createdAt", "updatedAt"]
+            }
+        });
         if (!profile) return UnauthorizedError(res, "Invalid token");
 
         return successOkWithData(res, "Profile fetched successfully", profile);
@@ -29,7 +34,7 @@ export async function updateProfile(req, res) {
     try {
         const userUid = req.userUid
 
-        const { name, description, organization, industry, countryCode, phone, address, tehsil, district, province } = req.body;
+        const { name, countryCode, phone, address, tehsil, district, province } = req.body;
 
         let fieldsToUpdate = {};
 
@@ -37,9 +42,6 @@ export async function updateProfile(req, res) {
         if (countryCode && !phone) return validationError(res, "Phone number must be provided when changing the country code.");
 
         if (name) fieldsToUpdate.name = name;
-        if (description) fieldsToUpdate.description = description;
-        if (organization) fieldsToUpdate.organization = organization;
-        if (industry) fieldsToUpdate.industry = industry;
 
         // Validate phone number if provided
         if (phone) {
@@ -71,7 +73,7 @@ export async function updateProfile(req, res) {
         const excludedFields = ["countryCode", "phone", "profileImg"];
         const fieldsToUpdateLowered = convertToLowercase(fieldsToUpdate, excludedFields);
 
-        await Employer.update(fieldsToUpdateLowered, {
+        await PpmiAdmin.update(fieldsToUpdateLowered, {
             where: { uuid: userUid },
         });
 

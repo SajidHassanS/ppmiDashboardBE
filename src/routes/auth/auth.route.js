@@ -5,8 +5,8 @@ import verifyToken from "../../middlewares/authMiddleware.js";
 const router = express.Router();
 
 // Authentication routes
-router.post("/signup", authCtrl.registerEmployer); // User registration
-router.post("/login", authCtrl.loginUser); // User login
+router.post("/signup", authCtrl.registerPpmiAdmin); // User registration
+router.post("/login", authCtrl.loginPpmiAdmin); // User login
 router.post("/regenerate-access-token", authCtrl.regenerateAccessToken); // Regenerate access token
 router.patch("/password/update", verifyToken, authCtrl.updatePassword); // Update password
 router.post("/password/forgot", authCtrl.forgotPassword); // Forgot password
