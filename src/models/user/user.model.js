@@ -32,7 +32,7 @@ const PpmiAdmin = sequelize.define(
     // },
     // industry: {
     //   type: DataTypes.STRING,
-    //   allowNull: true, // The sector the employer operates in
+    //   allowNull: true,
     // },
     countryCode: {
       type: DataTypes.STRING,

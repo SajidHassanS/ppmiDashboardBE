@@ -25,10 +25,7 @@ const Project = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    sector: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
+
     description: {
       type: DataTypes.TEXT,
       allowNull: false,
@@ -88,13 +85,13 @@ const Project = sequelize.define(
       defaultValue: 0,
     },
     status: {
-      type: DataTypes.ENUM("pending", "open", "closed", 'rejected'),
+      type: DataTypes.ENUM("pending", "open", "closed", "rejected"),
       defaultValue: "pending",
     },
     approvedby: {
       type: DataTypes.UUID,
       allowNull: true,
-    }
+    },
   },
   {
     schema: "public",

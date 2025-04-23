@@ -22,7 +22,7 @@ export async function addProject(req, res) {
     const reqBodyFields = bodyReqFields(req, res, [
       "title",
       "trade",
-      "sector",
+
       "description",
       "requirements",
       "location",
@@ -44,7 +44,7 @@ export async function addProject(req, res) {
     let {
       title,
       trade,
-      sector,
+
       description,
       requirements,
       location,
@@ -62,7 +62,7 @@ export async function addProject(req, res) {
     const projectData = {
       title,
       trade,
-      sector,
+
       description,
       requirements,
       location,
@@ -102,7 +102,7 @@ export async function getAllProjects(req, res) {
     // const userUid = req.user.uuid;
 
     const projects = await Project.findAll({
-      attributes: ["uuid", "title", "trade", "sector", "tehsil", "duration", "status"]
+      attributes: ["uuid", "title", "trade", "tehsil", "duration", "status"],
     });
     return successOkWithData(res, "Projects retrieved successfully", projects);
   } catch (error) {
@@ -122,8 +122,8 @@ export async function getProjectDetails(req, res) {
     const project = await Project.findOne({
       where: { uuid },
       attributes: {
-        exclude: ["approvedBy", "createdAt", "updatedAt"]
-      }
+        exclude: ["approvedBy", "createdAt", "updatedAt"],
+      },
     });
     if (!project) return frontError(res, "Invalid uuid.");
     return successOkWithData(res, "Project retrieved successfully", project);
@@ -147,7 +147,7 @@ export async function updateProjectDetails(req, res) {
     const {
       title,
       trade,
-      sector,
+
       description,
       requirements,
       location,
@@ -166,7 +166,7 @@ export async function updateProjectDetails(req, res) {
 
     if (title) fieldsToUpdate.title = title;
     if (trade) fieldsToUpdate.trade = trade;
-    if (sector) fieldsToUpdate.sector = sector;
+
     if (description) fieldsToUpdate.description = description;
     if (requirements) fieldsToUpdate.requirements = description;
     if (location) fieldsToUpdate.location = location;
@@ -248,7 +248,6 @@ export async function deleteProject(req, res) {
 //   }
 // }
 
-
 export async function projectStats(req, res) {
   try {
     // 1. Basic Status Stats
@@ -261,9 +260,9 @@ export async function projectStats(req, res) {
     ]);
 
     // 2. Group-based stats
-    const [byTrade, bySector, byProvince, byDistrict] = await Promise.all([
+    const [byTrade, byProvince, byDistrict] = await Promise.all([
       groupByField("trade"),
-      groupByField("sector"),
+
       groupByField("province"),
       groupByField("district"),
       // groupByField("creatorType"),
@@ -272,7 +271,10 @@ export async function projectStats(req, res) {
     // 3. Slots availability
     const [fullyFilled, partiallyFilled, empty] = await Promise.all([
       Project.count({
-        where: Sequelize.where(Sequelize.col("slots_filled"), Sequelize.col("total_slots")),
+        where: Sequelize.where(
+          Sequelize.col("slots_filled"),
+          Sequelize.col("total_slots")
+        ),
       }),
       Project.count({
         where: {
@@ -307,7 +309,9 @@ export async function projectStats(req, res) {
       }),
       Project.count({
         where: {
-          deadline: { [Op.gt]: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000) },
+          deadline: {
+            [Op.gt]: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000),
+          },
         },
       }),
     ]);
@@ -327,7 +331,7 @@ export async function projectStats(req, res) {
       total,
       status: { pending, open, closed, rejected },
       byTrade,
-      bySector,
+
       byProvince,
       byDistrict,
       // createdByType,
@@ -364,7 +368,6 @@ async function groupByField(field) {
     return acc;
   }, {});
 }
-
 
 // ========================= Enrolled Students ============================
 
